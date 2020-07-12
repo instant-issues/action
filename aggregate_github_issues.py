@@ -3,6 +3,7 @@ import argparse
 import json
 import os
 import sys
+from collections import defaultdict
 
 import requests
 
@@ -17,6 +18,7 @@ def aggregate_issues(repo, session):
     session = requests.Session()
 
     label_colors = {}
+    label_counts = defaultdict(lambda: 0)
 
     while True:
         print('fetching page %s' % page, file=sys.stderr)
@@ -38,10 +40,12 @@ def aggregate_issues(repo, session):
                 issues.append(issue)
             for label in result['labels']:
                 label_colors[label['name']] = label['color']
+                label_counts[label['name']] += 1
         page += 1
     return dict(
         repo = args.repo,
         labelColors = label_colors,
+        labels = [dict(name=x[0], count=x[1]) for x in sorted(label_counts.items(), key = lambda x: x[1], reverse=True)],
         issues = sorted(issues, key = lambda x: x['title'].lower()),
         pulls = sorted(pulls, key = lambda x: x['title'].lower())
     )
