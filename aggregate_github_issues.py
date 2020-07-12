@@ -18,7 +18,7 @@ def aggregate_issues(repo, session):
     session = requests.Session()
 
     label_colors = {}
-    label_counts = defaultdict(lambda: 0)
+    label_counts = defaultdict(lambda: [0, 0]) # {label_name: [issue_count, pull_count]}
 
     while True:
         print('fetching page %s' % page, file=sys.stderr)
@@ -34,18 +34,19 @@ def aggregate_issues(repo, session):
             issue = dict(num=result['number'], title=result['title'], labels=[l['name'] for l in result['labels']])
 
             # /issues of the GitHub v3 API returns both issues and pulls
-            if 'pull_request' in result:
+            is_pull = 'pull_request' in result
+            if is_pull:
                 pulls.append(issue)
             else:
                 issues.append(issue)
             for label in result['labels']:
                 label_colors[label['name']] = label['color']
-                label_counts[label['name']] += 1
+                label_counts[label['name']][is_pull] += 1
         page += 1
     return dict(
         repo = args.repo,
         labelColors = label_colors,
-        labels = [dict(name=x[0], count=x[1]) for x in sorted(label_counts.items(), key = lambda x: x[1], reverse=True)],
+        labels = [dict(name=x[0], issueCount=x[1][0], pullCount=x[1][1]) for x in sorted(label_counts.items(), key = lambda x: x[1], reverse=True)],
         issues = sorted(issues, key = lambda x: x['title'].lower()),
         pulls = sorted(pulls, key = lambda x: x['title'].lower())
     )
