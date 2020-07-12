@@ -1,5 +1,6 @@
 #!/bin/sh
 for repo in $INPUT_REPOS; do
+	repo=$(echo $repo | tr '[:upper:]' '[:lower:]')
 	mkdir -p $(dirname $repo)
 	TOKEN=$INPUT_TOKEN /aggregate_github_issues.py $repo > $repo.json
 done
