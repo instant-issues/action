@@ -1,0 +1,14 @@
+name: Aggregate open issues to a single JSON file.
+description: Allows the issues to be searched as you type with Instant Issues.
+author: Gittenburg <gittenburg@fsinf.at>
+inputs:
+  token:
+    description: GitHub API token
+    required: true
+  repos:
+    description: repositories separated by newlines
+    required: true
+runs:
+  using: docker
+  image: Dockerfile
+  entrypoint: /entrypoint.sh
