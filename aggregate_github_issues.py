@@ -17,8 +17,8 @@ def aggregate_issues(repo, session):
 
     session = requests.Session()
 
-    label_colors = {}
     label_counts = defaultdict(lambda: [0, 0]) # {label_name: [issue_count, pull_count]}
+    labels = {}
 
     while True:
         print('fetching page %s' % page, file=sys.stderr)
@@ -40,13 +40,18 @@ def aggregate_issues(repo, session):
             else:
                 issues.append(issue)
             for label in result['labels']:
-                label_colors[label['name']] = label['color']
+                labels[label['name']] = dict(name=label['name'], description=label['description'])
                 label_counts[label['name']][is_pull] += 1
         page += 1
+
+    sorted_labels = []
+    for name, (issue_count, pull_count) in sorted(label_counts.items(), key = lambda x: x[1], reverse=True):
+        labels[name]['issueCount'] = issue_count
+        labels[name]['pullCount'] = pull_count
+        sorted_labels.append(labels[name])
     return dict(
         repo = args.repo,
-        labelColors = label_colors,
-        labels = [dict(name=x[0], issueCount=x[1][0], pullCount=x[1][1]) for x in sorted(label_counts.items(), key = lambda x: x[1], reverse=True)],
+        labels = sorted_labels,
         issues = sorted(issues, key = lambda x: x['title'].lower()),
         pulls = sorted(pulls, key = lambda x: x['title'].lower())
     )
