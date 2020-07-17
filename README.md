@@ -25,7 +25,6 @@ jobs:
     - uses: instant-issues/action@master
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
-        repos: ${{ github.repository }}
 ```
 
 ## Downstream workflow
@@ -49,9 +48,15 @@ jobs:
     - uses: instant-issues/action@master
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
-        repos: |
-               someorg/somerepo1
-               someorg/somerepo2
+```
+
+Then you can create `.github/workflows/instant-issue-repos.yml` with, e.g.:
+
+```yml
+- name: someorg/someorg1
+  disjointLabels: [bug, UX, new feature]
+
+- name: someorg/someorg2
 ```
 
 ## Technical Background

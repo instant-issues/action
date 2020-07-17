@@ -10,32 +10,11 @@ import requests
 
 REPOS_API = 'https://api.github.com/repos/'
 
-def find_common_almost_disjoint_labels(sorted_labels, labels, issues):
-    top10_labels = [l['name'] for l in sorted_labels[:10]]
-    label_neighbors = defaultdict(lambda: defaultdict(lambda: 0))
-
-    for issue in issues:
-        top_labels = [l for l in issue['labels'] if l in top10_labels]
-
-        for a, b in itertools.product(top_labels, top_labels):
-            if a != b:
-                label_neighbors[a][b] += 1
-
-    major_labels = set()
-
-    for label, others in label_neighbors.items():
-        for other, count in list(others.items()):
-            if count / labels[other]['issueCount'] < 0.02:
-                major_labels.add(label)
-    return major_labels
-
-def aggregate_issues(repo, session):
+def aggregate_issues(repo, token, session):
     issues = []
     pulls = []
 
     page = 1
-
-    session = requests.Session()
 
     label_counts = defaultdict(lambda: [0, 0]) # {label_name: [issue_count, pull_count]}
     labels = {}
@@ -43,7 +22,7 @@ def aggregate_issues(repo, session):
     while True:
         print('fetching page %s' % page, file=sys.stderr)
         res = session.get(REPOS_API + repo + '/issues', params=dict(per_page=100, page=page, q='is:issue'),
-            headers={'Authorization': 'token ' + os.environ['TOKEN']})
+            headers={'Authorization': 'token ' + token})
         res.raise_for_status()
 
         results = res.json()
@@ -71,11 +50,10 @@ def aggregate_issues(repo, session):
         sorted_labels.append(labels[name])
 
     return dict(
-        repo = args.repo,
+        repo = repo,
         labels = sorted_labels,
         issues = sorted(issues, key = lambda x: x['title'].lower()),
-        pulls = sorted(pulls, key = lambda x: x['title'].lower()),
-        commonAlmostDisjointLabels = sorted(find_common_almost_disjoint_labels(sorted_labels, labels, issues), key=lambda l: labels[l]['issueCount'], reverse=True)
+        pulls = sorted(pulls, key = lambda x: x['title'].lower())
     )
 
 if __name__ == '__main__':
@@ -83,4 +61,4 @@ if __name__ == '__main__':
     parser.add_argument('repo', help='e.g. gittenburg/instant-issues')
     args = parser.parse_args()
 
-    print(json.dumps(aggregate_issues(args.repo, requests.Session())))
+    print(json.dumps(aggregate_issues(args.repo, os.environ['TOKEN'], requests.Session())))

@@ -5,9 +5,6 @@ inputs:
   token:
     description: GitHub API token
     required: true
-  repos:
-    description: repositories separated by newlines
-    required: true
 runs:
   using: docker
   image: Dockerfile
