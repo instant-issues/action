@@ -44,7 +44,7 @@ def aggregate_issues(repo, token, session):
         page += 1
 
     sorted_labels = []
-    for name, (issue_count, pull_count) in sorted(label_counts.items(), key = lambda x: x[1], reverse=True):
+    for name, (issue_count, pull_count) in sorted(label_counts.items(), key = lambda x: x[0].lower()):
         labels[name]['issueCount'] = issue_count
         labels[name]['pullCount'] = pull_count
         sorted_labels.append(labels[name])
